@@ -3,37 +3,35 @@
         <http:listener-connection host="0.0.0.0" port="8081"></http:listener-connection>
     </http:listener-config>
     <mcp:server-config name="Server" serverName="mule-mcp-server" serverVersion="1.0.0">
-        <mcp:sse-server-connection listenerConfig="Listener-config"></mcp:sse-server-connection>
+        <mcp:streamable-http-server-connection listenerConfig="Listener-config"></mcp:streamable-http-server-connection>
     </mcp:server-config>
     <flow name="TestMCP4">
         <mcp:tool-listener name="Test4" config-ref="Server">
-            <mcp:description><![CDATA[Test to return response to Cursor AI]]></mcp:description>
+            <mcp:description><![CDATA[Simple test tool for MCP connection with Cursor AI]]></mcp:description>
             <mcp:parameters-schema><![CDATA[{
 			"$schema": "http://json-schema.org/draft-07/schema#",
 			"type": "object",
 			"properties": {
-				"pageSize": {
-					"type": "integer",
-					"description": "Number of vendors to return per page",
-					"minimum": 1,
-					"maximum": 100,
-					"default": 50
-				},
-				"pageNumber": {
-					"type": "integer",
-					"description": "Page number to retrieve",
-					"minimum": 1,
-					"default": 1
+				"message": {
+					"type": "string",
+					"description": "Optional test message",
+					"default": "Hello from Mule MCP Server"
 				}
 			},
 			"required": []
 		}]]></mcp:parameters-schema>
-        <mcp:responses>    <mcp:text-tool-response-content text="#[payload.^raw]"/>
+        <mcp:responses>
+            <mcp:text-tool-response-content text="#['MCP Server Response: ' ++ (payload.message default 'Hello from Mule MCP Server') ++ ' - Connection successful at ' ++ now() as String]"/>
         </mcp:responses>            
         <mcp:on-error-responses>
-            <mcp:text-tool-response-content text="#['Error retrieving']"/>
+            <mcp:text-tool-response-content text="#['Error in MCP Server: ' ++ error.description]"/>
         </mcp:on-error-responses>    
         </mcp:tool-listener>
-        <set-payload value='{"result": "success"}' mimeType="application/json" />
+        <set-payload value='#[{
+			"status": "success",
+			"message": payload.message default "Hello from Mule MCP Server",
+			"timestamp": now(),
+			"server": "mule-mcp-server"
+		}]' mimeType="application/json" />
     </flow>
 </mule>

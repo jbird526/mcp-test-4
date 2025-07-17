@@ -1,0 +1,39 @@
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:mcp="http://www.mulesoft.org/schema/mule/mcp" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd  http://www.mulesoft.org/schema/mule/mcp http://www.mulesoft.org/schema/mule/mcp/current/mule-mcp.xsd  http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+    <http:listener-config name="Listener-config">
+        <http:listener-connection host="0.0.0.0" port="8081"></http:listener-connection>
+    </http:listener-config>
+    <mcp:server-config name="Server" serverName="mule-mcp-server" serverVersion="1.0.0">
+        <mcp:sse-server-connection listenerConfig="Listener-config"></mcp:sse-server-connection>
+    </mcp:server-config>
+    <flow name="TestMCP4">
+        <mcp:tool-listener name="Test4" config-ref="Server">
+            <mcp:description><![CDATA[Test to return response to Cursor AI]]></mcp:description>
+            <mcp:parameters-schema><![CDATA[{
+			"$schema": "http://json-schema.org/draft-07/schema#",
+			"type": "object",
+			"properties": {
+				"pageSize": {
+					"type": "integer",
+					"description": "Number of vendors to return per page",
+					"minimum": 1,
+					"maximum": 100,
+					"default": 50
+				},
+				"pageNumber": {
+					"type": "integer",
+					"description": "Page number to retrieve",
+					"minimum": 1,
+					"default": 1
+				}
+			},
+			"required": []
+		}]]></mcp:parameters-schema>
+        <mcp:responses>    <mcp:text-tool-response-content text="#[payload.^raw]"/>
+        </mcp:responses>            
+        <mcp:on-error-responses>
+            <mcp:text-tool-response-content text="#['Error retrieving']"/>
+        </mcp:on-error-responses>    
+        </mcp:tool-listener>
+        <set-payload value='{"result": "success"}' mimeType="application/json" />
+    </flow>
+</mule>
